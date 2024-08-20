@@ -1,7 +1,3 @@
-Here's a comprehensive README file template for your `fake-database-generator` project. This template includes sections that explain what the project is, how to set it up, how to use it, and other important details:
-
----
-
 # Fake Database Generator
 
 A Python-based tool for dynamically generating relational databases with fake data, driven by a customizable JSON schema. Ideal for testing, prototyping, and simulating database interactions using an MVC architecture.
