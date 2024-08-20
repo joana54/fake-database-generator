@@ -1,0 +1,37 @@
+[
+    {
+        "table_name": "Users",
+        "fields": [
+            {"name": "user_id", "type": "INTEGER", "primary_key": true},
+            {"name": "first_name", "type": "TEXT", "fake_data": "first_name"},
+            {"name": "last_name", "type": "TEXT", "fake_data": "last_name"},
+            {"name": "email", "type": "TEXT", "fake_data": "email"}
+        ]
+    },
+    {
+        "table_name": "Orders",
+        "fields": [
+            {"name": "order_id", "type": "INTEGER", "primary_key": true},
+            {"name": "user_id", "type": "INTEGER", "foreign_key": {"references": "Users(user_id)"}},
+            {"name": "order_date", "type": "TEXT", "fake_data": "date_this_year"},
+            {"name": "total_amount", "type": "REAL", "fake_data": "random_float"}
+        ]
+    },
+    {
+        "table_name": "Products",
+        "fields": [
+            {"name": "product_id", "type": "INTEGER", "primary_key": true},
+            {"name": "product_name", "type": "TEXT", "fake_data": "word"},
+            {"name": "price", "type": "REAL", "fake_data": "random_float"}
+        ]
+    },
+    {
+        "table_name": "OrderDetails",
+        "fields": [
+            {"name": "order_detail_id", "type": "INTEGER", "primary_key": true},
+            {"name": "order_id", "type": "INTEGER", "foreign_key": {"references": "Orders(order_id)"}},
+            {"name": "product_id", "type": "INTEGER", "foreign_key": {"references": "Products(product_id)"}},
+            {"name": "quantity", "type": "INTEGER", "fake_data": "random_int"}
+        ]
+    }
+]
