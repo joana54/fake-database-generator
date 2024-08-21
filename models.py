@@ -3,17 +3,39 @@ from faker import Faker
 import random
 
 class Database:
-    def __init__(self, schema):
+    """
+    The Database class handles the creation and management of an in-memory SQLite database.
+    It also generates and inserts fake data into the database tables based on a provided schema.
+    """
+
+    def __init__(self, schema, config):
+        """
+        Initialize the Database object.
+
+        :param schema: List[dict] - A schema defining the structure of the database tables.
+        """
         # Initialize the in-memory SQLite database
         self.conn = sqlite3.connect(':memory:')
         self.conn.execute("PRAGMA foreign_keys = ON")  # Enable foreign key support
         self.cursor = self.conn.cursor()
         self.fake = Faker()  # Initialize Faker for generating fake data
-        self.schema = schema  # Store the schema
+        self.schema = schema  # Store the schema for table creation and data insertion
+        self.config = config # Store the config settings
+
+        # Set random seed if specified
+        if "random_seed" in config:
+            random.seed(config["random_seed"])
+            Faker.seed(config["random_seed"])
+
         self.create_tables()  # Create tables based on the schema
 
     def create_tables(self):
-        # Create tables based on the provided schema
+        """
+        Create tables in the database based on the provided schema.
+
+        This method reads the schema and constructs the necessary SQL statements
+        to create the tables with appropriate fields and constraints (e.g., primary keys, foreign keys).
+        """
         for table in self.schema:
             fields = []
             foreign_keys = []
@@ -35,15 +57,22 @@ class Database:
             self.cursor.execute(create_table_sql)  # Execute the SQL to create the table
 
     def generate_fake_data(self):
-        # Dictionary to store IDs for easy reference
-        id_references = {}
-        used_user_ids = set()
+        """
+        Generate and insert fake data into the database tables based on the schema.
+
+        This method generates 10 rows of fake data for each table using the Faker library
+        and inserts the data into the database. It also handles foreign key relationships
+        and ensures uniqueness where required.
+        """
+        id_references = {}  # Dictionary to store generated IDs for foreign key references
+        used_user_ids = set()  # Set to track used user IDs for uniqueness
 
         for table in self.schema:
-            # Prepare the SQL insert statement
+            num_records = self.config["num_records"].get(table["table_name"], 10)
+            # Prepare the SQL insert statement for the current table
             insert_sql = f'INSERT INTO {table["table_name"]} ({", ".join([f["name"] for f in table["fields"] if "fake_data" in f or "foreign_key" in f])}) VALUES ({", ".join(["?" for f in table["fields"] if "fake_data" in f or "foreign_key" in f])})'
             fake_data_rows = []
-            for _ in range(10):  # Generate 10 rows of fake data
+            for _ in range(num_records):  # Generate 10 rows of fake data
                 row = []
                 for field in table["fields"]:
                     if "fake_data" in field:
@@ -80,29 +109,35 @@ class Database:
         self.conn.commit()  # Commit the transaction
 
     def generate_fake_value(self, fake_data_type):
-        # Generate fake data based on the specified type
-        if fake_data_type == "first_name":
-            return self.fake.first_name()
-        elif fake_data_type == "last_name":
-            return self.fake.last_name()
-        elif fake_data_type == "phone_number":
-            return self.fake.phone_number()
-        elif fake_data_type == "email":
-            return self.fake.email()
-        elif fake_data_type == "date_this_year":
-            return self.fake.date_this_year()
-        elif fake_data_type == "word":
-            return self.fake.word()
+        """
+        Generate a fake value based on the specified type.
+
+        :param fake_data_type: str - The type of fake data to generate.
+        :return: The generated fake value.
+        """
+        # Check if Faker has the requested method and use it
+        if hasattr(self.fake, fake_data_type):
+            return getattr(self.fake, fake_data_type)()
         elif fake_data_type == "random_float":
             return round(random.uniform(5.0, 500.0), 2)
         elif fake_data_type == "random_int":
             return random.randint(1, 10)
-        # Add more data types as needed
+        # Add more data types as needed here
 
     def fetch_data(self, table_name):
-        # Fetch all data from the specified table
+        """
+        Fetch all data from the specified table.
+
+        :param table_name: str - The name of the table to fetch data from.
+        :return: List[tuple] - A list of tuples containing the rows of data.
+        """
         return self.cursor.execute(f"SELECT * FROM {table_name}").fetchall()
 
     def close(self):
-        # Close the database connection
+        """
+        Close the database connection.
+
+        This method ensures that the connection to the SQLite database is properly closed,
+        freeing up any resources that were being used.
+        """
         self.conn.close()

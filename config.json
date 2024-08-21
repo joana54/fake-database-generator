@@ -1,0 +1,10 @@
+{
+    "num_records": {
+        "Users": 20,
+        "UsersPhoneNumbers": 20,
+        "Orders": 50,
+        "Products": 10,
+        "OrderDetails": 100
+    },
+    "random_seed": 42
+}
