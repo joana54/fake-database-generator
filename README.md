@@ -12,39 +12,11 @@ A Python-based tool for dynamically generating relational databases with fake da
 
 ## Table of Contents
 
-- [Installation](#installation)
 - [Usage](#usage)
 - [Project Structure](#project-structure)
 - [JSON Schema](#json-schema)
 - [Example](#example)
 - [Contributing](#contributing)
-- [License](#license)
-
-## Installation
-
-### Prerequisites
-
-- Python 3.7+
-- pip
-
-### Clone the Repository
-
-```bash
-git clone https://github.com/yourusername/fake-database-generator.git
-cd fake-database-generator
-```
-
-### Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Dependencies
-
-- `pandas`
-- `faker`
-- `sqlite3` (built-in with Python)
 
 ## Usage
 
@@ -119,11 +91,3 @@ Contributions are welcome! Please feel free to submit a Pull Request or open an 
 3. Commit your changes (`git commit -am 'Add some feature'`).
 4. Push to the branch (`git push origin feature/your-feature-name`).
 5. Open a Pull Request.
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-This README provides all the necessary information to understand, set up, and use the project. It also gives contributors guidelines on how they can participate.
