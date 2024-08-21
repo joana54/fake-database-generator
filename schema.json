@@ -9,6 +9,14 @@
         ]
     },
     {
+        "table_name": "UsersPhoneNumbers",
+        "fields": [
+            {"name": "phone_number_id", "type": "INTEGER", "primary_key": true},
+            {"name": "user_id", "type": "INTEGER", "foreign_key": {"references": "Users(user_id)"}, "unique": true},
+            {"name": "phone_number", "type": "TEXT", "fake_data": "phone_number"}
+        ]
+    },
+    {
         "table_name": "Orders",
         "fields": [
             {"name": "order_id", "type": "INTEGER", "primary_key": true},

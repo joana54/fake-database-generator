@@ -22,6 +22,8 @@ class Database:
                 field_definition = f'{field["name"]} {field["type"]}'
                 if field.get("primary_key", False):
                     field_definition += " PRIMARY KEY"
+                if field.get("unique", False):
+                    field_definition += " UNIQUE"
                 if "foreign_key" in field:
                     # Define foreign key constraints
                     foreign_keys.append(f'FOREIGN KEY ({field["name"]}) REFERENCES {field["foreign_key"]["references"]}')
@@ -35,6 +37,7 @@ class Database:
     def generate_fake_data(self):
         # Dictionary to store IDs for easy reference
         id_references = {}
+        used_user_ids = set()
 
         for table in self.schema:
             # Prepare the SQL insert statement
@@ -51,7 +54,17 @@ class Database:
                         # Handle foreign key references
                         referenced_table, referenced_field = field["foreign_key"]["references"].split("(")
                         referenced_field = referenced_field.rstrip(")")
-                        foreign_key_value = random.choice(id_references[referenced_table])
+                        # Ensure uniqueness for 1-to-1 relationships
+                        if "unique" in field:
+                            available_user_ids = [id for id in id_references[referenced_table] if id not in used_user_ids]
+                            if available_user_ids:
+                                foreign_key_value = random.choice(available_user_ids)
+                                used_user_ids.add(foreign_key_value)
+                            else:
+                                continue  # Skip or break if no more unique IDs are available
+                        else:
+                            foreign_key_value = random.choice(id_references[referenced_table])
+                    
                         row.append(foreign_key_value)
                     elif field.get("primary_key", False):
                         continue  # Skip primary keys if they're auto-incremented
