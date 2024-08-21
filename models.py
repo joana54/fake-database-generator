@@ -72,6 +72,8 @@ class Database:
             return self.fake.first_name()
         elif fake_data_type == "last_name":
             return self.fake.last_name()
+        elif fake_data_type == "phone_number":
+            return self.fake.phone_number()
         elif fake_data_type == "email":
             return self.fake.email()
         elif fake_data_type == "date_this_year":
