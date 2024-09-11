@@ -1,10 +1,24 @@
+"""
+This module is designed to manage database interactions and data manipulation for a specific 
+application. It provides functions to load JSON schema and configuration files, initialize 
+the application controller, generate fake data within the database, display data, and close 
+the database connection efficiently.
+
+Functions:
+    load_schema(json_file): Load and return the database schema from a JSON file.
+    load_config(json_file): Load and return the configuration parameters from a JSON file.
+    main(): Orchestrates the database schema loading, data generation, display, and cleanup.
+
+This module serves as the entry point of the script, utilizing the AppController to handle 
+all database operations.
+"""
+
+import json
 from utility import install_packages
+from controllers import AppController
 
 # Install necessary packages using the custom utility function
 install_packages(["Faker", "pandas"])
-
-from controllers import AppController
-import json
 
 def load_schema(json_file):
     """
@@ -16,7 +30,7 @@ def load_schema(json_file):
     Returns:
         dict: The loaded schema.
     """
-    with open(json_file, 'r') as file:
+    with open(json_file, mode='r', encoding="utf-8") as file:
         return json.load(file)
 
 
@@ -30,7 +44,7 @@ def load_config(json_file):
     Returns:
         dict: The loaded configuration.
     """
-    with open(json_file, 'r') as file:
+    with open(json_file, mode='r', encoding="utf-8") as file:
         return json.load(file)
 
 def main():
@@ -53,14 +67,14 @@ def main():
 
     # Initialize the AppController with the loaded schema and configuration
     controller = AppController(schema, config)
-   
+
     # Generate fake data in the database
     controller.generate_data()
 
     # Display data for each table in the schema
     for table in schema:
         controller.show_table(table["table_name"])
-   
+
     # Close the database connection
     controller.close_db()
 

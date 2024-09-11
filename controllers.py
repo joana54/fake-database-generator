@@ -1,3 +1,16 @@
+"""
+This module contains the AppController class, which orchestrates the interaction between the 
+data management (handled by the Database class) and the data presentation (handled by the 
+Display class) components of the application. It manages core functionalities such as initiating 
+data generation, fetching data for display, and closing database connections.
+
+Classes:
+    AppController: Manages database operations & coordinates with the Display class to show data.
+
+The AppController integrates the application's data layer with its presentation layer, 
+providing a high-level interface for database interaction and data visualization.
+"""
+
 from models import Database
 from views import Display
 
@@ -17,7 +30,7 @@ class AppController:
             config (dict): Configuration parameters.
         """
         self.db = Database(schema, config)
-   
+
     def generate_data(self):
         """
         Generate and insert fake data into the database using the schema.
@@ -27,7 +40,7 @@ class AppController:
         """
         # Generate fake data in the database
         self.db.generate_fake_data()
-   
+
     def show_table(self, table_name):
         """
         Fetch and display data from the specified table.
@@ -41,16 +54,16 @@ class AppController:
         """
         # Fetch data for the specified table from the database
         data = self.db.fetch_data(table_name)
-        
+
         # Find the schema for the specified table
         table_schema = next(table for table in self.db.schema if table["table_name"] == table_name)
-        
+
         # Extract column names from the table schema
         columns = [field["name"] for field in table_schema["fields"]]
-        
+
         # Display the table data using the Display class
         Display.show_table(data, columns, table_name)
-   
+
     def close_db(self):
         """
         Close the database connection.

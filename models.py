@@ -1,6 +1,26 @@
+"""
+This module contains the Database class, which is responsible for all direct interactions
+with the SQLite database. It manages the creation and management of an in-memory database,
+facilitates the generation and insertion of fake data based on a specified schema, and 
+provides utilities for fetching and closing the database.
+
+The Database class uses the SQLite3 library for database operations and the Faker library 
+to generate realistic dummy data for testing or development purposes. It ensures that 
+database operations are performed efficiently and safely, with support for foreign keys 
+and data integrity.
+
+Classes:
+    Database: Handles the creation, manipulation, and querying of the SQLite database.
+              It also manages connections and provides methods to close them properly.
+
+The Database class is crucial for simulating a fully functional database environment 
+during development, providing a robust platform for testing database-driven applications 
+without the need for external database setups.
+"""
+
 import sqlite3
-from faker import Faker
 import random
+from faker import Faker
 
 class Database:
     """
@@ -34,7 +54,8 @@ class Database:
         Create tables in the database based on the provided schema.
 
         This method reads the schema and constructs the necessary SQL statements
-        to create the tables with appropriate fields and constraints (e.g., primary keys, foreign keys).
+        to create the tables with appropriate fields and constraints (e.g., primary 
+        keys, foreign keys).
         """
         for table in self.schema:
             fields = []
@@ -50,7 +71,7 @@ class Database:
                     # Define foreign key constraints
                     foreign_keys.append(f'FOREIGN KEY ({field["name"]}) REFERENCES {field["foreign_key"]["references"]}')
                 fields.append(field_definition)
-           
+
             # Combine field definitions with foreign key constraints
             fields_sql = ", ".join(fields + foreign_keys)
             create_table_sql = f'CREATE TABLE {table["table_name"]} ({fields_sql})'
@@ -93,7 +114,7 @@ class Database:
                                 continue  # Skip or break if no more unique IDs are available
                         else:
                             foreign_key_value = random.choice(id_references[referenced_table])
-                    
+
                         row.append(foreign_key_value)
                     elif field.get("primary_key", False):
                         continue  # Skip primary keys if they're auto-incremented
