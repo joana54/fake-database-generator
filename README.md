@@ -64,7 +64,9 @@ The `schema.json` file is the core configuration for this project. It defines th
             {"name": "user_id", "type": "INTEGER", "primary_key": true},
             {"name": "first_name", "type": "TEXT", "fake_data": "first_name"},
             {"name": "last_name", "type": "TEXT", "fake_data": "last_name"},
-            {"name": "email", "type": "TEXT", "fake_data": "email"}
+            {"name": "email", "type": "TEXT", "fake_data": "email"},
+            {"name": "account_id", "type": "INTEGER", "foreign_key": {"references": "Accounts(account_id)"}, "unique": true},
+            {"name": "order_id", "type": "INTEGER", "foreign_key": {"references": "Orders(order_id)"}},
         ]
     },
     ...
