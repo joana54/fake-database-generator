@@ -42,7 +42,6 @@ class Database:
         self.conn.execute("PRAGMA foreign_keys = ON")  # Enable foreign key support
         self.cursor = self.conn.cursor()
         self.fake = Faker(use_weighting=True)  # Initialize Faker for generating fake data
-        self.fake.random_elements()
         self.schema = schema  # Store the schema for table creation and data insertion
         self.config = config # Store the config settings
 
