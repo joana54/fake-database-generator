@@ -20,6 +20,9 @@ without the need for external database setups.
 
 import sqlite3
 import random
+import numpy as np
+from datetime import datetime
+from scipy.stats import truncnorm
 from faker import Faker
 
 class Database:
@@ -38,7 +41,8 @@ class Database:
         self.conn = sqlite3.connect(':memory:')
         self.conn.execute("PRAGMA foreign_keys = ON")  # Enable foreign key support
         self.cursor = self.conn.cursor()
-        self.fake = Faker()  # Initialize Faker for generating fake data
+        self.fake = Faker(use_weighting=True)  # Initialize Faker for generating fake data
+        self.fake.random_elements()
         self.schema = schema  # Store the schema for table creation and data insertion
         self.config = config # Store the config settings
 
@@ -71,7 +75,6 @@ class Database:
                     # Define foreign key constraints
                     foreign_keys.append(f'FOREIGN KEY ({field["name"]}) REFERENCES {field["foreign_key"]["references"]}')
                 fields.append(field_definition)
-
             # Combine field definitions with foreign key constraints
             fields_sql = ", ".join(fields + foreign_keys)
             create_table_sql = f'CREATE TABLE {table["table_name"]} ({fields_sql})'
@@ -90,16 +93,23 @@ class Database:
 
         for table in self.schema:
             num_records = self.config["num_records"].get(table["table_name"], 10)
-            # Prepare the SQL insert statement for the current table
-            insert_sql = f'INSERT INTO {table["table_name"]} ({", ".join([f["name"] for f in table["fields"] if "fake_data" in f or "foreign_key" in f])}) VALUES ({", ".join(["?" for f in table["fields"] if "fake_data" in f or "foreign_key" in f])})'
+
+            NUMERIC_TYPES = {"int", "float", "decimal", "bigint"}
+            insertable_fields = [f for f in table["fields"] if "fake_data" in f or "foreign_key" in f or f.get("type") in NUMERIC_TYPES]
+            columns = [f["name"] for f in insertable_fields]
+
+            insert_sql = f'INSERT INTO {table["table_name"]} ({", ".join(columns)}) VALUES ({", ".join(["?" for _ in columns])})'
             fake_data_rows = []
-            for _ in range(num_records):  # Generate 10 rows of fake data
+           
+            
+            for _ in range(num_records):
                 row = []
-                for field in table["fields"]:
-                    if "fake_data" in field:
+                for field in insertable_fields:
+                    if "fake_data" in field or field.get("type") in ["int", "float", "decimal", "bigint"]:
                         # Generate fake data based on the specified type
-                        fake_value = self.generate_fake_value(field["fake_data"])
+                        fake_value = self.generate_fake_value(field)
                         row.append(fake_value)
+
                     elif "foreign_key" in field:
                         # Handle foreign key references
                         referenced_table, referenced_field = field["foreign_key"]["references"].split("(")
@@ -124,26 +134,84 @@ class Database:
             self.cursor.executemany(insert_sql, fake_data_rows)
 
             # Track generated IDs if this table has a primary key
+
             if any(f.get("primary_key", False) for f in table["fields"]):
                 id_references[table["table_name"]] = [row[0] for row in self.cursor.execute(f'SELECT {table["fields"][0]["name"]} FROM {table["table_name"]}').fetchall()]
 
         self.conn.commit()  # Commit the transaction
 
-    def generate_fake_value(self, fake_data_type):
+    
+
+    def generate_fake_value(self, field_info):
         """
         Generate a fake value based on the specified type.
 
         :param fake_data_type: str - The type of fake data to generate.
         :return: The generated fake value.
         """
+        # Check for int-based date column
+        if (
+            field_info.get("type") == "int"
+            and "date" in field_info.get("name", "").lower()):
+            return self.generate_fake_int_date()
+
         # Check if Faker has the requested method and use it
-        if hasattr(self.fake, fake_data_type):
-            return getattr(self.fake, fake_data_type)()
-        elif fake_data_type == "random_float":
-            return round(random.uniform(5.0, 500.0), 2)
-        elif fake_data_type == "random_int":
-            return random.randint(1, 10)
-        # Add more data types as needed here
+        if "fake_data" in field_info:
+            fake_data_type = field_info["fake_data"]
+            if hasattr(self.fake, fake_data_type):
+                return getattr(self.fake, fake_data_type)()
+
+        elif field_info.get("type") in ["int", "float", "decimal", "bigint"]:
+            try:
+                mean = field_info.get("mean")
+                std = field_info.get("stddev")
+                min_val = field_info.get("min")
+                max_val = field_info.get("max")
+
+                if all(param is not None for param in [mean, std, min_val, max_val]):
+                    if std == 0.0:
+                        return mean
+                    else:
+                        a = (min_val - mean) / std
+                        b = (max_val - mean) / std
+
+                        sample = truncnorm.rvs(a, b, loc=mean, scale=std, size=1)[0]
+                        sample = np.clip(sample, min_val, max_val)
+
+                        if field_info.get("type") in ["int", "bigint"]:
+                            return int(round(sample))
+                        return sample
+            except (KeyError, ZeroDivisionError) as e:
+                print(f"Error generating numerical data for {field_info.get('name')}: {e}")
+
+                if min_val is not None and max_val is not None:
+                    if field_info.get("type") in ["int", "bigint"]:
+                        return random.randint(min_val, max_val)
+                    return random.uniform(min_val, max_val)
+        return None
+        # Add more data types as needed here    
+
+
+
+
+    def generate_fake_int_date(self):
+        """
+        Generate a fake date from 2000 up to today and return it as an int in 1YYMMDD format.
+        Example: 2025-03-27 → 1250327
+        """
+        min_date = datetime(2000, 1, 1)
+        max_date = datetime.today() 
+
+        fake_date = self.fake.date_between(start_date=min_date, end_date=max_date)
+
+        century_digit = 1
+        yy = fake_date.year % 100
+        mm = fake_date.month
+        dd = fake_date.day
+
+        return int(f"{century_digit}{yy:02d}{mm:02d}{dd:02d}")
+
+
 
     def fetch_data(self, table_name):
         """
@@ -154,6 +222,7 @@ class Database:
         """
         return self.cursor.execute(f"SELECT * FROM {table_name}").fetchall()
 
+
     def close(self):
         """
         Close the database connection.
@@ -162,3 +231,4 @@ class Database:
         freeing up any resources that were being used.
         """
         self.conn.close()
+

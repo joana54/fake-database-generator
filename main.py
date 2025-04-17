@@ -15,10 +15,11 @@ all database operations.
 
 import json
 from utility import install_packages
-from controllers import AppController
-
 # Install necessary packages using the custom utility function
 install_packages(["Faker", "pandas"])
+from controllers import AppController
+
+
 
 def load_schema(json_file):
     """
@@ -60,7 +61,7 @@ def main():
     5. Close the database connection.
     """
     # Load the schema from the JSON file
-    schema = load_schema('schema.json')
+    schema = load_schema('schema_with_stats2.json')
 
     # Load the configuration from the JSON file
     config = load_config('config.json')
