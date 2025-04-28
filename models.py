@@ -69,7 +69,7 @@ class Database:
                 composite_pk = table["composite_primary_keys"][0]["fields"]
 
             for field in table["fields"]:
-                parts = [field["name"], fld["type"]]
+                parts = [field["name"], field["type"]]
 
                 if field.get("not_null", False):
                     parts.append("NOT NULL")
